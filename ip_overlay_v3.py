@@ -364,6 +364,7 @@ class Overlay(QWidget):
         self.ok, self.lats, self.changes, self.flash_t, self.s = None, [], 0, 0.0, 1.0
         self._d = self._rs = None; self._abtn = False; self._arrow = None; self.stats = (None, None)
         self.anim_t, self.clean_msg, self.clean_t, self.cleaning, self._st_t = 0.0, "", 0.0, False, 0.0
+        self._fails = 0
         self.bus = Bus(); self.bus.data.connect(self.on_data); self.bus.clean.connect(self.on_clean)
         threading.Thread(target=worker, args=(self.bus,), daemon=True).start()
         self.timer = QTimer(self); self.timer.timeout.connect(self.tick); self.timer.start(1000)
@@ -399,9 +400,16 @@ class Overlay(QWidget):
 
     def on_data(self, d):
         self.ok = d["ok"]
+        if not self.ok:
+            self._fails += 1
+            if self._fails == 2 and self.ip: self.play("down")  # 2 failed checks in a row = really offline
         if self.ok:
-            if self.ip and d["ip"] != self.ip:
-                self.changes += 1; self.flash_t = time.time()
+            was_down = self._fails >= 2
+            self._fails = 0
+            changed = bool(self.ip and d["ip"] != self.ip)
+            if changed: self.changes += 1; self.flash_t = time.time()
+            snd = (["up"] if was_down else []) + (["ip"] if changed else [])
+            if snd: self.play(*snd)
             self.ip, self.geo = d["ip"], d["geo"]
             self.last_ok = time.strftime("%H:%M:%S")
             self.lats = (self.lats + [d["ms"]])[-60:]
@@ -438,6 +446,25 @@ class Overlay(QWidget):
         self._rs = self._d = None; self.sink()
     def mouseDoubleClickEvent(self, e):
         if self.ip: QApplication.clipboard().setText(self.ip)
+    def play(self, *kinds):
+        """Plays Windows system sounds in order: ip=chimes, down=Speech Off, up=Speech On."""
+        if not self.cfg.get("sound", True) or sys.platform != "win32": return
+        files = {"ip": "chimes.wav", "down": "Speech Off.wav", "up": "Speech On.wav"}
+        def job():
+            try:
+                import winsound
+                media = os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Media")
+                for k in kinds:
+                    path = os.path.join(media, files[k])
+                    if os.path.exists(path): winsound.PlaySound(path, winsound.SND_FILENAME)
+                    else: winsound.MessageBeep(winsound.MB_OK)
+            except Exception: pass
+        threading.Thread(target=job, daemon=True).start()
+
+    def set_sound(self, on):
+        self.cfg["sound"] = bool(on); save_cfg(self.cfg)
+        if on: self.play("ip")  # preview
+
     def start_clean(self):
         if self.cleaning: return
         self.cleaning, self.anim_t = True, time.time()
@@ -589,6 +616,8 @@ class Overlay(QWidget):
         if sys.platform == "win32":
             a = m.addAction("Start with Windows"); a.setCheckable(True); a.setChecked(autostart_get())
             a.triggered.connect(lambda on: autostart_set(on))
+        sa = m.addAction("Sound alerts"); sa.setCheckable(True); sa.setChecked(self.cfg.get("sound", True))
+        sa.triggered.connect(self.set_sound)
         m.addAction("Clean RAM", self.start_clean)
         m.addAction("Reset change counter", lambda: setattr(self, "changes", 0))
         m.addSeparator(); m.addAction("Quit", QApplication.quit)
