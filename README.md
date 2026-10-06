@@ -30,6 +30,7 @@
 | 📊 **RAM, CPU and ping** | Lightweight system stats read straight from Windows. No extra packages. |
 | 🚀 **One-click RAM clean** | Click the rocket: it shakes, launches, comes back, and reports how much memory was freed. |
 | 🖥️ **Desktop-level window** | Lives *on* the desktop, below your apps. Frameless, translucent, no taskbar entry. |
+| 🔔 **Sound alerts** | Soft built-in Windows sounds: *chimes* when your IP changes, *Speech Off* when the connection drops, *Speech On* when it comes back. Toggle from the menu. |
 | 🎨 **7 color themes** | Capsule, Midnight, Graphite, Aurora, Emerald, Sunset and Paper (light). Remembered between runs. |
 | ⚡ **Start with Windows** | Enabled on first run, toggle any time from the menu. |
 | 🧲 **Auto-sizing** | Width follows the content and stays glued to the screen edge, no wasted space. |
@@ -58,7 +59,7 @@ python ip_overlay_v3.py
 | **Click the rocket** | Clean RAM (with animation) |
 | **Drag** | Move the capsule |
 | **Double-click** | Copy the current IP |
-| **Right-click** | Menu: Copy IP · Theme · Display · Snap to corner · Clean RAM · Start with Windows · Quit |
+| **Right-click** | Menu: Copy IP · Theme · Display · Snap to corner · Sound alerts · Clean RAM · Start with Windows · Quit |
 
 ### Status colors
 
@@ -109,7 +110,7 @@ It only contacts public IP and geo-IP services to look up your own address, plus
 
 ## 🗺️ Roadmap
 
-- [ ] Sound or notification on IP change
+- [ ] Desktop notification on IP change
 - [ ] DNS leak check
 - [ ] IP change log to file
 - [ ] IPv6 support
