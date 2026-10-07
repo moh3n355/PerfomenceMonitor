@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🚀 IP Overlay
+# 🚀 Rocket Monitor
 
 **A tiny desktop widget that shows your live public IP, country flag, ping, RAM and CPU, all in one sleek capsule.**
 
